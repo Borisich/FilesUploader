@@ -31,9 +31,8 @@ var UploadForm = function (_Component) {
 
     var _this = _possibleConstructorReturn(this, (UploadForm.__proto__ || Object.getPrototypeOf(UploadForm)).call(this));
 
-    _this.state = { user: {} };
+    _this.state = { status: '' };
     _this.onSubmit = _this.handleSubmit.bind(_this);
-    //this.formData = this.refs.uploadForm.getDOMNode();
     return _this;
   }
 
@@ -42,21 +41,22 @@ var UploadForm = function (_Component) {
     value: function handleSubmit(e) {
       e.preventDefault();
       var self = this;
-      //var formData = self.refs.uploadForm.getDOMNode();
-      //var formData = ReactDOM.findDOMNode(self.refs.uploadForm);
       var formData = new FormData(_reactDom2.default.findDOMNode(self.refs.uploadForm));
-      //console.log(formData);
       fetch('http://localhost:80/upload', {
         method: 'POST',
-        //mode: 'no-cors',
-        /*body: {
-          file: self.refs.sampleFile
-        }*/
         body: formData
       }).then(function (response) {
-        //console.log(response);
+        switch (response.status) {
+          case 200:
+            self.setState({ status: "Файлы загружены успешно" });
+            break;
+          case 700:
+            self.setState({ status: "Файлы для загрузки не выбраны!" });
+            break;
+          default:
+            self.setState({ status: "Ошибка при загрузке файлов" });
+        }
         return response.text();
-        //console.log(response.json());
       }).then(function (body) {
         console.log(body);
       });
@@ -66,19 +66,22 @@ var UploadForm = function (_Component) {
     value: function render() {
       return _react2.default.createElement(
         'div',
-        { className: 'wrapper' },
+        null,
         _react2.default.createElement(
           'form',
           {
             onSubmit: this.onSubmit,
             ref: 'uploadForm',
-            id: 'uploadForm',
-            name: 'uploadForm',
-            action: 'http://localhost:80/upload',
-            method: 'post',
-            encType: 'multipart/form-data' },
-          _react2.default.createElement('input', { type: 'file', name: 'sampleFile', ref: 'sampleFile', multiple: true }),
+            name: 'uploadForm' },
+          _react2.default.createElement('input', { type: 'file', name: 'fileChooser', multiple: true }),
           _react2.default.createElement('input', { type: 'submit', value: 'Upload!' })
+        ),
+        _react2.default.createElement(
+          'div',
+          null,
+          _react2.default.createElement('br', null),
+          _react2.default.createElement('br', null),
+          this.state.status
         )
       );
     }

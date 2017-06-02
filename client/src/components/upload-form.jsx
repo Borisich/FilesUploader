@@ -4,29 +4,30 @@ import ReactDOM from 'react-dom';
 export default class UploadForm extends Component {
   constructor() {
     super();
-    this.state = { user: {} };
+    this.state = { status: '' };
     this.onSubmit = this.handleSubmit.bind(this);
-    //this.formData = this.refs.uploadForm.getDOMNode();
   }
+
   handleSubmit(e) {
     e.preventDefault();
     var self = this;
-    //var formData = self.refs.uploadForm.getDOMNode();
-    //var formData = ReactDOM.findDOMNode(self.refs.uploadForm);
     var formData = new FormData(ReactDOM.findDOMNode(self.refs.uploadForm));
-    //console.log(formData);
     fetch('http://localhost:80/upload', {
         method: 'POST',
-        //mode: 'no-cors',
-        /*body: {
-          file: self.refs.sampleFile
-        }*/
         body: formData
       })
       .then(function(response) {
-        //console.log(response);
+        switch (response.status) {
+          case 200:
+            self.setState({status: "Файлы загружены успешно"});
+            break;
+          case 700:
+            self.setState({status: "Файлы для загрузки не выбраны!"});
+            break;
+          default:
+            self.setState({status: "Ошибка при загрузке файлов"});
+        }
         return response.text();
-        //console.log(response.json());
       }).then(function(body) {
         console.log(body);
       });
@@ -34,18 +35,18 @@ export default class UploadForm extends Component {
 
   render() {
     return (
-      <div className="wrapper">
+      <div>
         <form
           onSubmit={this.onSubmit}
           ref='uploadForm'
-          id='uploadForm'
-          name='uploadForm'
-          action='http://localhost:80/upload'
-          method='post'
-          encType="multipart/form-data">
-            <input type="file" name="sampleFile" ref="sampleFile" multiple/>
+          name='uploadForm'>
+            <input type="file" name="fileChooser"  multiple/>
             <input type='submit' value='Upload!' />
         </form>
+        <div>
+          <br /><br />
+          {this.state.status}
+        </div>
       </div>
     )
   }

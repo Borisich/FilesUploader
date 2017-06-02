@@ -1,29 +1,15 @@
 var express = require('express');
-var app = express();
+var avaiableExtensions = require('./config.json');
 var fileUpload = require('express-fileupload');
 
-
+var app = express();
 var server = require('http').createServer(app);
-//var io = require('socket.io').listen(server);
 
-//var accessData = require('./accessData.json');
-//var sha256 = require ('js-sha256');
 app.use(fileUpload());
 
 app.use(function (req, res, next) {
-
     // Website you wish to allow to connect
     res.setHeader('Access-Control-Allow-Origin', '*');
-
-    // Request methods you wish to allow
-    //res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-    // Request headers you wish to allow
-    //res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-    // Set to true if you need the website to include cookies in the requests sent
-    // to the API (e.g. in case you use sessions)
-    //res.setHeader('Access-Control-Allow-Credentials', true);
 
     // Pass to next layer of middleware
     next();
@@ -35,52 +21,49 @@ server.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));
 });
 
-/*io.on('connection', function (socket) {
-    socket.on('login-data', function (data) {
-      var sendResponse = function(){
-        if ((data.login == accessData.login)&&(data.password == sha256(accessData.password))) {
-          socket.emit('result','OK')
-        }
-        else {
-          socket.emit('result','WRONG');
-        }
-      }
-      setTimeout(sendResponse, 1000);
-    });
-});*/
+isExtensionAvaiable = function(fileName) {
+  let tmp = fileName.split('.');
+  let extension = tmp[tmp.length-1].toLowerCase();
+  return (avaiableExtensions.indexOf(extension) == -1) ? false : true;
+}
 
 app.post('/upload', function(req, res) {
-  console.log('Upload REQUEST getted');
-
-  //set the appropriate HTTP header
-  //res.setHeader('Content-Type', 'text/html');
-
   if (!req.files) {
-    //return res.status(400).send('No files were uploaded.');
-    return res.send('No files were uploaded.');
-    //return res.json({foo : 'bar'});
+    return res.status(400).send('No files were uploaded.');
   }
-  // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
-  let sampleFile = req.files.sampleFile;
-  if (!sampleFile) {
-    //return res.send('No files were uploaded.');
-    //return res.json({foo : 'bar'});
-    return res.send('No files');
+  // The name of the input field (fileChooser) is used to retrieve the uploaded files
+  let files = req.files.fileChooser;
+  if (!files) {
+    return res.status(700).send('No files were uploaded.');
   }
-  for (var i = 0; i < sampleFile.length; i++) {
-    console.log(sampleFile[i].name);
+
+  if (!files.length){
+    files = [].concat(files);
   }
-  //console.log(sampleFile); // the uploaded file object
-  // Use the mv() method to place the file somewhere on your server
-  for (var i = 0; i < sampleFile.length; i++) {
-    sampleFile[i].mv(sampleFile[i].name, function(err) {
-      if (err)
+
+  var totalProceed = 0;
+  for (var i = 0; i < files.length; i++) {
+    if (!isExtensionAvaiable(files[i].name)) {
+      console.log('Extension not avaiable!');
+      totalProceed++;
+      res.status(600).write('File ' + totalProceed + ' (' + files[i].name + ') did not uploaded. Extension error\n');
+      if (totalProceed == files.length) {
+          res.end();
+      }
+      continue;
+    }
+
+    // Use the mv() method to place the file somewhere on your server
+    files[i].mv(__dirname + '/UploadedFiles/' + files[i].name, function(err) {
+      if (err) {
+        console.log('ERROR');
         return res.status(500).send(err);
-
-
+      }
+      totalProceed++;
+      res.write('File ' + totalProceed + ' uploaded!\n');
+      if (totalProceed == files.length) {
+          res.end();
+      }
     });
-    res.write('File '+sampleFile[i].name+' uploaded!');
   }
-  res.end();
-
 });
