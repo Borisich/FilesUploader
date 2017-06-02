@@ -29,10 +29,39 @@ var UploadForm = function (_Component) {
   function UploadForm() {
     _classCallCheck(this, UploadForm);
 
-    return _possibleConstructorReturn(this, (UploadForm.__proto__ || Object.getPrototypeOf(UploadForm)).apply(this, arguments));
+    var _this = _possibleConstructorReturn(this, (UploadForm.__proto__ || Object.getPrototypeOf(UploadForm)).call(this));
+
+    _this.state = { user: {} };
+    _this.onSubmit = _this.handleSubmit.bind(_this);
+    //this.formData = this.refs.uploadForm.getDOMNode();
+    return _this;
   }
 
   _createClass(UploadForm, [{
+    key: 'handleSubmit',
+    value: function handleSubmit(e) {
+      e.preventDefault();
+      var self = this;
+      //var formData = self.refs.uploadForm.getDOMNode();
+      //var formData = ReactDOM.findDOMNode(self.refs.uploadForm);
+      var formData = new FormData(_reactDom2.default.findDOMNode(self.refs.uploadForm));
+      //console.log(formData);
+      fetch('http://localhost:80/upload', {
+        method: 'POST',
+        //mode: 'no-cors',
+        /*body: {
+          file: self.refs.sampleFile
+        }*/
+        body: formData
+      }).then(function (response) {
+        //console.log(response);
+        return response.text();
+        //console.log(response.json());
+      }).then(function (body) {
+        console.log(body);
+      });
+    }
+  }, {
     key: 'render',
     value: function render() {
       return _react2.default.createElement(
@@ -40,12 +69,15 @@ var UploadForm = function (_Component) {
         { className: 'wrapper' },
         _react2.default.createElement(
           'form',
-          { ref: 'uploadForm',
+          {
+            onSubmit: this.onSubmit,
+            ref: 'uploadForm',
             id: 'uploadForm',
+            name: 'uploadForm',
             action: 'http://localhost:80/upload',
             method: 'post',
             encType: 'multipart/form-data' },
-          _react2.default.createElement('input', { type: 'file', name: 'sampleFile' }),
+          _react2.default.createElement('input', { type: 'file', name: 'sampleFile', ref: 'sampleFile', multiple: true }),
           _react2.default.createElement('input', { type: 'submit', value: 'Upload!' })
         )
       );
